@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Report Code Generator</title>
+    <meta name="description" content="แปลงไฟล์ Excel (.xlsx) เป็นโค้ดรายงาน NPOI, JasperReports JRXML, และ RDLC">
+    <!-- CDN Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
+    <!-- App Scripts -->
+    <script src="./utils-color.js" defer></script>
+    <script src="./utils-cal.js" defer></script>
+    <script src="./export-npoi.js" defer></script>
+    <script src="./export-jrxmlV6.js" defer></script>
+    <script src="./export-rdlc.js" defer></script>
+    <script src="./export-primeng.js" defer></script>
+    <script src="./export-xlsx-style.js" defer></script>
+    <script src="./export-efcore.js" defer></script>
+    <script src="./export-typescript.js" defer></script>
+    <script src="./export-itextsharp.js" defer></script>
+    <script src="./read-excel.js" defer></script>
+    <script src="./app.js" defer></script>
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="app-logo">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="app-title">Excel Report Code Generator</h1>
+                    <p class="app-subtitle">แปลงไฟล์ Excel เป็นโค้ดรายงานต่าง ๆ</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="badge badge-info">v2.0</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <!-- Drop Zone (always visible) -->
+        <div class="drop-zone" id="dropZone">
+            <input type="file" id="fileInput" accept=".xlsx" hidden />
+            <div class="drop-zone-content">
+                <div class="drop-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <p class="drop-text">ลากไฟล์ Excel (.xlsx) มาไว้ที่นี่</p>
+                <p class="drop-hint">หรือ <a href="#" id="browseLink">เลือกไฟล์</a> จากเครื่องของคุณ</p>
+            </div>
+        </div>
+
+        <!-- Toolbar Row (drop-zone compact + actions) -->
+        <div class="toolbar" id="toolbar" style="display:none">
+            <div class="file-info" id="fileInfo">
+                <div class="info-row">
+                    <span class="info-label">ชื่อไฟล์</span>
+                    <span class="info-value" id="fileName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">ขนาด</span>
+                    <span class="info-value" id="fileSize">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">จำนวนชีต</span>
+                    <span class="info-value" id="sheetCount">-</span>
+                </div>
+                <div class="info-row info-row-sheet">
+                    <span class="info-label">เลือกชีต</span>
+                    <select class="sheet-select" id="sheetSelector"></select>
+                </div>
+            </div>
+            <div class="toolbar-actions" id="actionsPanel">
+                <!-- <div class="actions">
+                    <button id="exportNpoiBtn" class="btn btn-npoi">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        NPOI
+                    </button>
+                    <button id="exportItextsharpBtn" class="btn btn-itextsharp">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                        iTextSharp
+                    </button>
+                    <button id="exportJrxmlBtn" class="btn btn-jrxml">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                        JRXML
+                    </button>
+                    <button id="exportRdlcBtn" class="btn btn-rdlc">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                        </svg>
+                        RDLC
+                    </button>
+                </div>
+                <button id="clearBtn" class="btn btn-clear">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    ยกเลิก
+                </button> -->
+            </div>
+        </div>
+
+        <!-- Sections Panel -->
+        <div class="sections-panel" id="sectionsPanel" style="display:none">
+            <div class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                ส่วนของรายงานที่ตรวจพบ
+            </div>
+            <div class="sections-list" id="sectionsList"></div>
+        </div>
+
+        <!-- Preview -->
+        <div class="preview-container" id="previewContainer" style="display:none">
+            <div class="preview-header">
+                <div class="panel-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    ตัวอย่างข้อมูล
+                </div>
+            </div>
+                <div class="actions">
+                    <button id="exportNpoiBtn" class="btn btn-npoi">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        NPOI
+                    </button>
+                    <button id="exportItextsharpBtn" class="btn btn-itextsharp">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                        iTextSharp
+                    </button>
+                    <button id="exportJrxmlBtn" class="btn btn-jrxml">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                        JRXML
+                    </button>
+                    <button id="exportRdlcBtn" class="btn btn-rdlc">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                        </svg>
+                        RDLC
+                    </button>
+                    <button id="exportNgprimeBtn" class="btn btn-ngprime">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"></polygon>
+                            <line x1="12" y1="22" x2="12" y2="15.5"></line>
+                            <polyline points="22 8.5 12 15.5 2 8.5"></polyline>
+                        </svg>
+                        PrimeNG
+                    </button>
+                    <button id="exportXlsxStyleBtn" class="btn btn-xlsxstyle">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        xlsx-style
+                    </button>
+                    <button id="exportEfCoreBtn" class="btn btn-efcore">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                        </svg>
+                        EF Core
+                    </button>
+                    <button id="exportTypeScriptBtn" class="btn btn-typescript">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        TypeScript
+                    </button>
+                    <button id="clearBtn" class="btn btn-clear">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    ยกเลิก
+                </button>
+                </div>
+            <div id="tableContainer"></div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display:none">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <p class="loading-text" id="loadingText">กำลังประมวลผล...</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+</body>
+
+</html>
