@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Document Generator</title>
+    <meta name="description" content="แปลง Excel template เป็น JRXML เก็บใน SQLite และสร้างเอกสาร PDF / Excel ด้วย JasperReports">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- ======================= HEADER ======================= -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="app-logo">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="app-title">Project Document Generator</h1>
+                    <p class="app-subtitle">เทมเพลต Excel → JRXML → เอกสาร PDF / Excel</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="badge badge-info" id="serverBadge">เชื่อมต่อเซิร์ฟเวอร์...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ======================= NAV MENUS ======================= -->
+    <nav class="menu-nav">
+        <button class="menu-btn active" data-menu="upload" id="menuUploadBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            อัปโหลดเทมเพลต
+        </button>
+        <button class="menu-btn" data-menu="generate" id="menuGenerateBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            สร้างเอกสาร
+        </button>
+    </nav>
+
+    <main class="app-main">
+
+        <!-- ===================================================== -->
+        <!-- MENU 1 : UPLOAD TEMPLATE                              -->
+        <!-- ===================================================== -->
+        <section id="menu-upload" class="menu-panel">
+            <div class="panel-grid">
+
+                <!-- Left : upload + details -->
+                <div class="col">
+                    <div class="card">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            ขั้นตอนที่ 1 · อัปโหลดไฟล์ Excel Template
+                        </div>
+
+                        <div class="drop-zone" id="tplDropZone">
+                            <input type="file" id="tplFileInput" accept=".xlsx" hidden />
+                            <div class="drop-zone-content">
+                                <div class="drop-icon">
+                                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                </div>
+                                <p class="drop-text">ลากไฟล์ Excel template (.xlsx) มาไว้ที่นี่</p>
+                                <p class="drop-hint">หรือ <a href="#" id="tplBrowseLink">เลือกไฟล์</a> จากเครื่องของคุณ</p>
+                                <p class="drop-note">คอลัมน์ A ใช้ระบุส่วนรายงาน เช่น title / columnheader / detail / summary / group:ชื่อกลุ่ม</p>
+                            </div>
+                        </div>
+
+                        <div class="file-chip" id="tplFileInfo" style="display:none">
+                            <span class="info-value" id="tplFileName">-</span>
+                            <span class="info-label" id="tplFileSize">-</span>
+                        </div>
+
+                        <!-- Sheet selector (if >1 sheets) -->
+                        <div class="field" id="tplSheetField" style="display:none">
+                            <label>เลือกชีต</label>
+                            <select id="tplSheetSelector" class="input"></select>
+                        </div>
+
+                        <!-- Detected sections -->
+                        <div class="sections-box" id="tplSectionsBox" style="display:none">
+                            <div class="mini-title">ส่วนรายงานที่ตรวจพบ</div>
+                            <div class="chips" id="tplSectionsChips"></div>
+                        </div>
+                    </div>
+
+                    <div class="card" id="tplDetailCard" style="display:none">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            ขั้นตอนที่ 2 · รายละเอียดเทมเพลต
+                        </div>
+                        <div class="field">
+                            <label>ชื่อเทมเพลต <span class="req">*</span></label>
+                            <input type="text" id="tplName" class="input" placeholder="เช่น รายงานพนักงาน, รายงานสินค้า ฯลฯ">
+                        </div>
+                        <div class="field">
+                            <label>รายละเอียด / คำอธิบาย</label>
+                            <textarea id="tplDesc" class="input" rows="2" placeholder="อธิบายข้อมูลที่ใช้กับเทมเพลตนี้ (เช่น ต้องมีคอลัมน์อะไรบ้าง)"></textarea>
+                        </div>
+
+                        <!-- Detected fields & params -->
+                        <div class="detect-row" id="tplFieldsRow" style="display:none">
+                            <div class="mini-title">ฟิลด์ข้อมูลที่ตรวจพบ (คอลัมน์ในไฟล์ข้อมูล)</div>
+                            <div class="chips" id="tplFieldsChips"></div>
+                        </div>
+                        <div class="detect-row" id="tplParamsRow" style="display:none">
+                            <div class="mini-title">พารามิเตอร์ (P{{ชื่อ}})</div>
+                            <div class="chips" id="tplParamsChips"></div>
+                        </div>
+
+                        <div class="field">
+                            <label>เนื้อหา JRXML <button type="button" class="link-btn" id="tplRevertBtn">↺ สร้างใหม่จากไฟล์</button></label>
+                            <textarea id="tplJrxml" class="input code" rows="10" spellcheck="false"></textarea>
+                        </div>
+
+                        <div class="actions-row">
+                            <button class="btn btn-primary" id="tplSaveBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                บันทึกเทมเพลต
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right : saved templates -->
+                <div class="col">
+                    <div class="card">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            เทมเพลตที่บันทึกไว้
+                        </div>
+                        <div class="template-list" id="tplList"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- MENU 2 : GENERATE DOCUMENT                             -->
+        <!-- ===================================================== -->
+        <section id="menu-generate" class="menu-panel" style="display:none">
+            <div class="panel-grid">
+
+                <div class="col">
+                    <div class="card">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                            เลือกเทมเพลต
+                        </div>
+                        <div class="field">
+                            <label>เทมเพลต</label>
+                            <select id="genTemplateSelect" class="input">
+                                <option value="">-- กรุณาเลือกเทมเพลต --</option>
+                            </select>
+                        </div>
+                        <div id="genTemplateInfo" style="display:none">
+                            <div class="info-box" id="genTemplateDesc"></div>
+                            <div class="detect-row">
+                                <div class="mini-title">คอลัมน์ที่ระบบจะแมปจากไฟล์ข้อมูล (row 1 = ชื่อคอลัมน์)</div>
+                                <div class="chips" id="genFieldsChips"></div>
+                            </div>
+                            <div class="detect-row" id="genParamsRow" style="display:none">
+                                <div class="mini-title">ค่าพารามิเตอร์</div>
+                                <div id="genParamsInputs"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" id="genDataCard" style="display:none">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            อัปโหลดไฟล์ข้อมูล (Excel)
+                        </div>
+                        <div class="drop-zone drop-zone-sm" id="dataDropZone">
+                            <input type="file" id="dataFileInput" accept=".xlsx" hidden />
+                            <div class="drop-zone-content">
+                                <div class="drop-icon">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                </div>
+                                <p class="drop-text">ลากไฟล์ข้อมูล (.xlsx) มาไว้ที่นี่</p>
+                                <p class="drop-hint">แถวที่ 1 = ชื่อคอลัมน์, แถวถัดไป = ข้อมูล</p>
+                            </div>
+                        </div>
+                        <div class="file-chip" id="dataFileInfo" style="display:none">
+                            <span class="info-value" id="dataFileName">-</span>
+                            <span class="info-label" id="dataFileSize">-</span>
+                        </div>
+                        <div class="mini-table" id="dataPreviewBox" style="display:none">
+                            <div class="mini-title">ตัวอย่างข้อมูล (10 แถวแรก)</div>
+                            <div class="table-wrap"><table id="dataPreviewTable" class="data-table"></table></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="card" id="genOutputCard" style="display:none">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            สร้างเอกสาร
+                        </div>
+
+                        <div class="actions-col">
+                            <button class="btn btn-pdf" id="previewPdfBtn" disabled>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                ดูตัวอย่าง PDF
+                            </button>
+                            <button class="btn btn-excel" id="exportExcelBtn" disabled>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                                ส่งออกเป็น Excel
+                            </button>
+                        </div>
+                        <p class="hint-text">ตัวอย่าง PDF เปิดในหน้าต่างพรีวิว · ส่งออก Excel จะดาวน์โหลดไฟล์ .xlsx</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- PDF preview modal -->
+    <div class="modal-overlay" id="pdfModal" style="display:none">
+        <div class="modal-box">
+            <div class="modal-head">
+                <span>พรีวิวเอกสาร (PDF)</span>
+                <div>
+                    <a class="btn btn-sm" id="pdfDownloadLink" download="document.pdf">ดาวน์โหลด</a>
+                    <button class="btn btn-sm btn-clear" id="pdfCloseBtn">ปิด</button>
+                </div>
+            </div>
+            <iframe id="pdfFrame" class="pdf-frame"></iframe>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display:none">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <p class="loading-text" id="loadingText">กำลังประมวลผล...</p>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ======================= SCRIPTS ======================= -->
+    <script src="/lib/jszip.min.js"></script>
+    <script src="/lib/exceljs.min.js"></script>
+    <script src="/js/utils-color.js"></script>
+    <script src="/js/utils-cal.js"></script>
+    <script src="/js/jrxml-pipeline.js"></script>
+    <script src="/js/export-jrxmlV6.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+
+</html>

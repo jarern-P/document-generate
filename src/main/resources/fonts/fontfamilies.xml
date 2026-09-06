@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<fontFamilies>
+
+	<fontFamily name="Sarabun">
+		<normal>fonts/Sarabun-Regular.ttf</normal>
+		<bold>fonts/Sarabun-Bold.ttf</bold>
+		<italic>fonts/Sarabun-Italic.ttf</italic>
+		<boldItalic>fonts/Sarabun-BoldItalic.ttf</boldItalic>
+		<pdfEncoding>Identity-H</pdfEncoding>
+		<pdfEmbedded>true</pdfEmbedded>
+	</fontFamily>
+
+</fontFamilies>
