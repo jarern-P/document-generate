@@ -1,0 +1,40 @@
+# ----------------------------------------
+# Build outputs
+# ----------------------------------------
+
+# Maven build directory (JARs, classes, generated sources)
+target/
+
+# jpackage app-image output (build-app.ps1)
+dist/
+
+# Compiled class files (in case of stray compiles outside target/)
+*.class
+
+# ----------------------------------------
+# Logs & runtime data
+# ----------------------------------------
+*.log
+hs_err_pid*
+replay_pid*
+
+# ----------------------------------------
+# IDE
+# ----------------------------------------
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# ----------------------------------------
+# OS junk
+# ----------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+
+#tools/sarabun.zip
+tools/sarabun.zip

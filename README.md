@@ -10,10 +10,10 @@
 ./mvnw clean package
 ```
 
-สร้างไฟล์ JAR ที่ `target/document-generator-1.0.0.jar`
+สร้างไฟล์ JAR ที่ `target/document-generator.jar`
 
 ```bash
-java -jar target/document-generator-1.0.0.jar
+java -jar target/document-generator.jar
 ```
 
 หน้าบ้านจะเปิดขึ้นที่ `http://127.0.0.1:8080/` (จะเปิด браузерอัตโนมัติ หรือจะเปิดเองก็ได้)
