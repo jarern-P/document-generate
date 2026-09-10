@@ -97,4 +97,5 @@ java -version
 .\build-app.ps1
 ```
 
+
 สร้างไฟล์ installer ในโฟลเดอร์ `dist`
